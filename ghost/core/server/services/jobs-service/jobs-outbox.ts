@@ -37,6 +37,12 @@ interface ClaimedRow {
   envelope: string;
 }
 
+// MySQL rounds a fractional DATETIME on insert, which can round available_at up
+// and leave a freshly inserted row briefly ineligible.
+function floorToSecond(date: Date): Date {
+  return new Date(Math.floor(date.getTime() / 1000) * 1000);
+}
+
 export class JobsOutbox {
   readonly #knex: Knex;
 
@@ -45,7 +51,7 @@ export class JobsOutbox {
   }
 
   async insert({ id, envelope }: OutboxEntry, { transacting }: InsertOptions = {}): Promise<void> {
-    const now = new Date();
+    const now = floorToSecond(new Date());
     const row = {
       id,
       envelope: z.encode(OutboxEnvelope, envelope),

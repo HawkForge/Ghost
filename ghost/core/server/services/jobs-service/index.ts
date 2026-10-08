@@ -1,10 +1,21 @@
 import errors from '@tryghost/errors';
-import { JobsService } from './jobs-service';
+import type { Knex } from 'knex';
+import { JobsService, JobsOutboxWiring } from './jobs-service';
+import { JobsOutbox } from './jobs-outbox';
+import { OutboxRelay } from './outbox-relay';
+import { getOutboxConfig } from './outbox-config';
 import type { JobsShutdownOptions } from '@tryghost/adapter-base-jobs';
+
+const DatabaseInfo = require('@tryghost/database-info');
+
+export interface JobsServiceInitOptions {
+  knex: Knex;
+  config: { get(key: string): unknown };
+}
 
 let instance: JobsService | undefined;
 
-export function init(): JobsService {
+export function init({ knex, config }: JobsServiceInitOptions): JobsService {
   // The instance lives for the whole process: the didInit-guarded mentions
   // service captures it in MentionController and MentionSendingService, so
   // an in-process restart (test harness) must revive the same object rather
@@ -17,11 +28,34 @@ export function init(): JobsService {
   const adapterManager = require('../adapter-manager').default;
   const logging = require('@tryghost/logging');
   const sentry = require('../../../shared/sentry');
+  const backend = adapterManager.getAdapter('jobs');
+
+  const outboxConfig = getOutboxConfig(config);
+  // The relay claims rows with FOR UPDATE SKIP LOCKED, which SQLite does not have.
+  const isMySQL = DatabaseInfo.isMySQL(knex);
+  const active = outboxConfig.enabled && isMySQL;
+
+  let outbox: JobsOutboxWiring | undefined;
+  if (active) {
+    const store = new JobsOutbox({ knex });
+    const relay = new OutboxRelay({
+      outbox: store,
+      backend,
+      logging,
+      sentry,
+      pollIntervalMs: outboxConfig.pollIntervalMs,
+      submissionTimeoutMs: outboxConfig.submissionTimeoutMs,
+      retryDelayMs: outboxConfig.retryDelayMs,
+    });
+    outbox = { store, relay };
+  }
 
   instance = new JobsService({
-    backend: adapterManager.getAdapter('jobs'),
+    backend,
     logging,
     sentry,
+    outbox,
+    logOutboxUnavailable: outboxConfig.enabled && !isMySQL,
   });
 
   return instance;
