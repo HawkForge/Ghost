@@ -13,7 +13,7 @@ import {
 import type { AutomationDetail } from '@tryghost/admin-x-framework/api/automations';
 import { detail } from './run-history.test-utils';
 
-const labs = { automations: true, automationsPerTier: true, automationRunAnalytics: true };
+const labs = { automations: true, automationRunAnalytics: true };
 const button = (name: string) => page.getByRole('button', { name, exact: true });
 const addWait = async () => {
   await button('Add step').click();
@@ -272,12 +272,12 @@ describe('New automation', () => {
     await expect.element(dialog.getByRole('tab', { name: 'Preview' })).toBeEnabled();
   });
 
-  it('does not offer creation when its flag is off', async () => {
+  it('offers creation without optional labs flags', async () => {
     fakeAutomations([]);
     await renderAdminApp('/automations/new', { labs: { automations: true } });
-    await expect.poll(currentRoute).toBe('/automations');
-    await expect.element(page.getByRole('heading', { name: 'Automations' })).toBeVisible();
-    await expect.element(button('New automation')).not.toBeInTheDocument();
+    await expect.element(button('Add step')).toBeVisible();
+    await expect.element(button('Save')).toBeDisabled();
+    expect(currentRoute()).toBe('/automations/new');
   });
 
   for (const [title, scope] of [

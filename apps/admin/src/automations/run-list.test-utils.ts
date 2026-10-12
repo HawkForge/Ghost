@@ -17,7 +17,6 @@ export const flags = {
   labs: {
     automations: true,
     automationRunAnalytics: true,
-    automationsPerTier: true,
   },
 };
 const detail = (id: string): AutomationDetail => ({

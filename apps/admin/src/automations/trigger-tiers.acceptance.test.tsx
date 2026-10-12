@@ -91,7 +91,7 @@ describe('Automation trigger tiers', () => {
 
     await page
       .getByRole('region', { name: 'Editing canvas' })
-      .click({ position: { x: 20, y: 20 } });
+      .click({ position: { x: 20, y: 100 } });
     await expect.element(options).not.toBeInTheDocument();
     await expect.element(picker()).toHaveTextContent('Bronze');
 

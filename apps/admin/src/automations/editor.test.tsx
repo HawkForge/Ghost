@@ -1076,7 +1076,7 @@ describe('AutomationEditor', () => {
     { status: 'active', label: 'Publish changes', nextStatus: 'active' },
     { status: 'active', label: 'Turn off', nextStatus: 'inactive' },
   ] as const)('saves settings only on explicit $label', async ({ status, label, nextStatus }) => {
-    mockLabs.current = { automationRunAnalytics: true, automationsPerTier: true };
+    mockLabs.current = { automationRunAnalytics: true };
     mockUseReadAutomation.mockReturnValue({
       data: { automations: [{ ...automationDetail, status }] },
       isLoading: false,
@@ -1127,7 +1127,7 @@ describe('AutomationEditor', () => {
   });
 
   it.each(['', '   '])('blocks saving blank name %j but allows empty description', (name) => {
-    mockLabs.current = { automationRunAnalytics: true, automationsPerTier: true };
+    mockLabs.current = { automationRunAnalytics: true };
     mockUseReadAutomation.mockReturnValue({
       data: { automations: [{ ...automationDetail, status: 'inactive' }] },
       isLoading: false,
@@ -1153,7 +1153,7 @@ describe('AutomationEditor', () => {
   });
 
   it('hides the Performance tab when run analytics is disabled', () => {
-    mockLabs.current = { automationRunAnalytics: false, automationsPerTier: true };
+    mockLabs.current = { automationRunAnalytics: false };
     mockUseReadAutomation.mockReturnValue({
       data: { automations: [automationDetail] },
       isLoading: false,

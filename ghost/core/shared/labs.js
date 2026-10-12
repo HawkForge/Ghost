@@ -49,8 +49,6 @@ const PUBLIC_BETA_FEATURES = [
 // Which is only visible if the developer experiments flag is enabled
 const PRIVATE_FEATURES = [
   'automations',
-  'automationsArchive',
-  'automationsPerTier',
   'stripeAutomaticTax',
   'importMemberTier',
   'csvContentImporter',

@@ -101,7 +101,6 @@ const AutomationEditorContent: React.FC<{
 
   const editMutation = useEditAutomation();
   const automationRunAnalyticsEnabled = useFeatureFlag('automationRunAnalytics');
-  const automationsPerTierEnabled = useFeatureFlag('automationsPerTier');
   const [validationFeedback, setValidationFeedback] =
     React.useState<AutomationValidationAction | null>(null);
   const showValidationFeedback = (action: AutomationValidationAction) => {
@@ -192,7 +191,7 @@ const AutomationEditorContent: React.FC<{
     action: AutomationValidationAction,
   ): boolean => {
     setValidationFeedback(null);
-    if (automationsPerTierEnabled && !automationToValidate.name.trim()) {
+    if (!automationToValidate.name.trim()) {
       toast.error('Add an automation name.');
       return false;
     }

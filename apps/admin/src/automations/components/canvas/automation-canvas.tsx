@@ -556,7 +556,6 @@ const AutomationCanvas: React.FC<AutomationCanvasProps> = ({
   const [selectedStep, setSelectedStep] = useState<SelectedStep | null>(null);
   const [deleteConfirmationActionId, setDeleteConfirmationActionId] = useState<string | null>(null);
   const automationRunAnalyticsEnabled = useFeatureFlag('automationRunAnalytics');
-  const automationsPerTierEnabled = useFeatureFlag('automationsPerTier');
   const selectedStepId = selectedStep?.id ?? null;
   const emailModalStepId = searchParams.get(EMAIL_STEP_QUERY_PARAM);
   const isRouterOpenedEmailModal =
@@ -732,11 +731,9 @@ const AutomationCanvas: React.FC<AutomationCanvasProps> = ({
     Boolean(automation?.id) &&
     automationRunAnalyticsEnabled &&
     Boolean(configQuery.data?.config.stats);
-  const isAutomationSidebarAvailable = isPerformanceEnabled || automationsPerTierEnabled;
   // Flow data arrives after mount. Use its status until the user chooses a panel state.
   const isAutomationSidebarOpen =
-    isAutomationSidebarAvailable &&
-    (automationSidebarOpenOverride ?? (isPerformanceEnabled && automation?.status === 'active'));
+    automationSidebarOpenOverride ?? (isPerformanceEnabled && automation?.status === 'active');
   const initialViewport = getInitialViewport(
     window.innerWidth - (isAutomationSidebarOpen && window.innerWidth >= 960 ? 480 : 0),
   );
@@ -946,27 +943,25 @@ const AutomationCanvas: React.FC<AutomationCanvasProps> = ({
       data-testid="automation-canvas"
       gap="none"
     >
-      {isAutomationSidebarAvailable && (
-        <AutomationSidebar
-          automationId={automation.id}
-          description={automation.description}
-          isOpen={isAutomationSidebarOpen}
-          isRunSelectionDisabled={Boolean(emailModalAction) || Boolean(deleteConfirmationAction)}
-          metadata={!automationsPerTierEnabled ? 'hidden' : isHistoryOpen ? 'readonly' : 'editable'}
-          name={automation.name}
-          performanceEnabled={isPerformanceEnabled}
-          selectedRunId={selectedRunId}
-          triggerTierScope={automation.trigger_tier_scope}
-          onDetailsChange={(details) => onChange({ ...automation, ...details })}
-          onOpenChange={(open) => {
-            setAutomationSidebarOpenOverride(open);
-            if (open) {
-              clearDetail();
-            }
-          }}
-          onSelectRun={handleSelectRun}
-        />
-      )}
+      <AutomationSidebar
+        automationId={automation.id}
+        description={automation.description}
+        isOpen={isAutomationSidebarOpen}
+        isRunSelectionDisabled={Boolean(emailModalAction) || Boolean(deleteConfirmationAction)}
+        metadata={isHistoryOpen ? 'readonly' : 'editable'}
+        name={automation.name}
+        performanceEnabled={isPerformanceEnabled}
+        selectedRunId={selectedRunId}
+        triggerTierScope={automation.trigger_tier_scope}
+        onDetailsChange={(details) => onChange({ ...automation, ...details })}
+        onOpenChange={(open) => {
+          setAutomationSidebarOpenOverride(open);
+          if (open) {
+            clearDetail();
+          }
+        }}
+        onSelectRun={handleSelectRun}
+      />
       <Box
         ref={viewport.measureCanvas}
         className={cn(
