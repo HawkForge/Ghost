@@ -29,7 +29,7 @@ export default [
   }),
   ...nodeLibConfig({
     typescript: false,
-    srcGlobs: ['*.js', 'lib/**/*.js'],
+    srcGlobs: ['*.js', 'lib/**/*.{js,mjs}'],
     testGlobs: ['test/**/*.test.js'],
     extraSrcRules: cliRules,
     extraTestRules: cliRules,

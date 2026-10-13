@@ -117,6 +117,7 @@ catalog:
   '@types/jsdom': 30.0.0
   '@types/nconf': 0.10.7
   '@types/jsonwebtoken': 9.0.10
+  '@types/js-yaml': 4.0.9
   '@types/node': 22.20.1
   '@types/react': 18.3.31
   '@types/react-dom': 18.3.7

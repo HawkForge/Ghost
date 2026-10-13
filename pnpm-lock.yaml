@@ -386,6 +386,9 @@ catalogs:
     '@types/express-brute':
       specifier: 1.0.6
       version: 1.0.6
+    '@types/js-yaml':
+      specifier: 4.0.9
+      version: 4.0.9
     '@types/jsdom':
       specifier: 30.0.0
       version: 30.0.0
@@ -4396,6 +4399,9 @@ importers:
       camelcase-keys:
         specifier: 10.0.3
         version: 10.0.3
+      dependency-cruiser:
+        specifier: 'catalog:'
+        version: 18.1.1
       execa:
         specifier: 'catalog:'
         version: 10.0.1
@@ -4421,6 +4427,9 @@ importers:
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.61.1
+      '@types/js-yaml':
+        specifier: 'catalog:'
+        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.1
