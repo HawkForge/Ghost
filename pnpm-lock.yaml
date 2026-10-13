@@ -359,6 +359,9 @@ catalogs:
     '@tryghost/mongo-knex':
       specifier: 0.11.2
       version: 0.11.2
+    '@tryghost/pretty-cli':
+      specifier: 3.3.16
+      version: 3.3.16
     '@tryghost/promise':
       specifier: 2.3.16
       version: 2.3.16
@@ -4355,6 +4358,9 @@ importers:
       '@internal/scripts':
         specifier: workspace:*
         version: link:../scripts
+      '@tryghost/pretty-cli':
+        specifier: 'catalog:'
+        version: 3.3.16
       jsonwebtoken:
         specifier: 'catalog:'
         version: 8.5.1
