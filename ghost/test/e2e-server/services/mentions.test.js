@@ -68,22 +68,22 @@ async function sendForPostSettled() {
 
 let processedJobs;
 
-function recordProcessed(resource) {
-  processedJobs.push(resource);
+function recordProcessed(job) {
+  processedJobs.push(job);
 }
 
 // Wrap the seam the job handler calls: completion here means the job ran,
 // without coupling the test to the queue or its backend.
 function trackWebmentionSending() {
   const sendingService = mentionsService.sendingService;
-  const original = sendingService.sendForHTMLResource.bind(sendingService);
-  sinon.stub(sendingService, 'sendForHTMLResource').callsFake(async (resource) => {
+  const original = sendingService.sendWebmentions.bind(sendingService);
+  sinon.stub(sendingService, 'sendWebmentions').callsFake(async (job) => {
     try {
-      return await original(resource);
+      return await original(job);
     } finally {
       // Recorded in finally: "processed" means the handler finished,
       // successful or not - the nock assertions decide correctness.
-      recordProcessed(resource);
+      recordProcessed(job);
     }
   });
 }
@@ -245,10 +245,9 @@ describe('Mentions Service', function () {
           .body({ posts: [editedPost] })
           .expectStatus(200);
 
-        // The edit dispatches a job (the html changed); "does not send" is
-        // the handler's link diff yielding nothing, so wait for processing.
-        await waitForSends(2);
+        await sendForPostSettled();
 
+        sinon.assert.calledOnce(mentionsService.sendingService.sendWebmentions);
         assert.equal(mentionMock.isDone(), false);
         assert.equal(endpointMock.isDone(), false);
       });
@@ -421,10 +420,9 @@ describe('Mentions Service', function () {
           .body({ pages: [editedPage] })
           .expectStatus(200);
 
-        // The edit dispatches a job (the html changed); "does not send" is
-        // the handler's link diff yielding nothing, so wait for processing.
-        await waitForSends(2);
+        await sendForPostSettled();
 
+        sinon.assert.calledOnce(mentionsService.sendingService.sendWebmentions);
         assert.equal(mentionMock.isDone(), false);
         assert.equal(mentionMock.isDone(), false);
       });
