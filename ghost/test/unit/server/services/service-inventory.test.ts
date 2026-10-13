@@ -3,6 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import { z } from 'zod';
+import { readServiceRootExtras } from './service-root-shape';
 
 const coreRoot = path.resolve(__dirname, '../../../..');
 const servicesRoot = path.join(coreRoot, 'core/server/services');
@@ -82,7 +83,7 @@ function assertFileWithin(root: string, relativePath: string) {
 }
 
 describe('service migration inventory', function () {
-  // Read metadata only: importing the catalogue could construct resources or
+  // Read metadata and source only: importing the catalogue could construct resources or
   // require a database before a service's real owner has initialized it.
   const inventory = inventorySchema.parse(
     yaml.load(readFileSync(path.join(servicesRoot, 'service-inventory.yaml'), 'utf8')),
@@ -113,6 +114,28 @@ describe('service migration inventory', function () {
   });
 
   for (const [name, service] of Object.entries(inventory.services)) {
+    if (service.migrated) {
+      it(`${name} has the migrated root shape and exactly the catalogued extras`, function () {
+        const rootFile = path.join(
+          servicesRoot,
+          service.kind === 'directory' ? `${name}/index.ts` : name,
+        );
+        const helperImport = path
+          .relative(path.dirname(rootFile), path.join(coreRoot, 'core/kernel/define-service'))
+          .split(path.sep)
+          .join('/');
+        const actual = readServiceRootExtras(
+          readFileSync(rootFile, 'utf8'),
+          rootFile,
+          helperImport,
+        );
+        assert.deepEqual(
+          actual,
+          Object.keys(service.extras ?? {}).sort(),
+          'Catalogue every extra and remove stale catalogue entries',
+        );
+      });
+    }
     it(`${name} has valid evidence, migration assessment and explicit audit gaps`, function () {
       assert.equal(
         service.migration.complexity === 'not-applicable',
