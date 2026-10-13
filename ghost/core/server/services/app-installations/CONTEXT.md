@@ -2,7 +2,7 @@
 
 App Installations covers a site's record of the apps it has approved: what each
 one runs, what is waiting for approval, and who did what. Apps, manifests and
-changes are defined in App Contracts (`packages/app-contracts/CONTEXT.md`).
+changes are defined in [App Contracts](../../../../../packages/app-contracts/CONTEXT.md).
 
 ## Language
 
@@ -86,9 +86,9 @@ load, or one for another app, leaves the approved manifest running.
 _Avoid_: refresh, sync, poll
 
 **Silent change**:
-A change the re-check applies to the approved manifest straight away, without
-the publisher. Any other change makes the newer manifest the pending one and
-suspends the installation.
+A change App Contracts says needs no approval. The re-check applies it to the
+approved manifest straight away, without the publisher. Any other change makes
+the newer manifest the pending one and suspends the installation.
 _Avoid_: minor change, safe change
 
 ### History

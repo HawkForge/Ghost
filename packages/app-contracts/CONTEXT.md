@@ -3,7 +3,7 @@
 App Contracts covers what Ghost and an app must agree on: how an app describes
 itself, how two descriptions of the same app differ, and how Admin and an app's
 page talk while Admin shows it. How a site installs and approves apps belongs
-to App Installations; the [context map](../../CONTEXT-MAP.md) relates the two.
+to [App Installations](../../ghost/core/server/services/app-installations/CONTEXT.md).
 
 ## Language
 
