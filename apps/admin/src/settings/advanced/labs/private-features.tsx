@@ -20,16 +20,6 @@ const features: Feature[] = [
     flag: 'automations',
   },
   {
-    title: 'Archive automations',
-    description: 'Let members archive and restore automations.',
-    flag: 'automationsArchive',
-  },
-  {
-    title: 'Automations per tier',
-    description: 'Allow automations to be configured for individual tiers.',
-    flag: 'automationsPerTier',
-  },
-  {
     title: 'Stripe Automatic Tax (private beta)',
     description: 'Use Stripe Automatic Tax at Stripe Checkout. Needs to be enabled in Stripe',
     flag: 'stripeAutomaticTax',
