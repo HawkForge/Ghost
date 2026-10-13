@@ -6,7 +6,8 @@ import { agentProvider, fixtureManager, mockManager } from '../../utils/e2e-fram
 import { toDatabaseDate } from '../../../core/server/lib/db-types/date';
 
 // Required, not imported, so this is the same module instance Ghost initialised at boot.
-const appInstallations: typeof import('../../../core/server/services/app-installations') = require('../../../core/server/services/app-installations');
+const appInstallations: typeof import('../../../core/server/services/app-installations').default =
+  require('../../../core/server/services/app-installations').default;
 const models = require('../../../core/server/models');
 const configUtils = require('../../utils/config-utils');
 
@@ -40,7 +41,7 @@ describe('App installations Admin API', function () {
   };
   let owner: { actor: { id: string; type: 'user' } };
 
-  const service = () => appInstallations.default.service;
+  const service = () => appInstallations.service;
   const install = (overrides: Record<string, unknown> = {}) =>
     service().install(owner, { manifestUrl: MANIFEST_URL, manifest: manifest(overrides) });
   const MANIFEST_HOST = 'https://podcast.example.com';
@@ -849,7 +850,7 @@ describe('App installations Admin API', function () {
     it('answers 404 where in-development tables are not created', async function () {
       configUtils.set('createInDevelopmentTables', false);
 
-      assert.equal(appInstallations.isAvailable(), false);
+      assert.equal(appInstallations.extras.isAvailable(), false);
       await agent.get('apps/installations/').expectStatus(404);
     });
   });
