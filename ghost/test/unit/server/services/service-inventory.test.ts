@@ -3,7 +3,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import { z } from 'zod';
-import { readServiceRootExtras } from './service-root-shape';
+import ts from 'typescript';
 
 const coreRoot = path.resolve(__dirname, '../../../..');
 const servicesRoot = path.join(coreRoot, 'core/server/services');
@@ -82,6 +82,75 @@ function assertFileWithin(root: string, relativePath: string) {
   assert.ok(statSync(resolved).isFile(), `Expected a file: ${relativePath}`);
 }
 
+// Extract catalogue names only. ESLint separately enforces the root's source shape.
+function declaredExtras(fileName: string): string[] {
+  const source = ts.createSourceFile(
+    fileName,
+    readFileSync(fileName, 'utf8'),
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const constants = new Map<string, ts.Expression>();
+  let exported: ts.Expression | undefined;
+  for (const statement of source.statements) {
+    if (ts.isExportAssignment(statement)) {
+      exported = statement.expression;
+    }
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        if (ts.isIdentifier(declaration.name) && declaration.initializer) {
+          constants.set(declaration.name.text, declaration.initializer);
+        }
+      }
+    }
+  }
+  function resolve(
+    expression: ts.Expression | undefined,
+    seen = new Set<string>(),
+  ): ts.Expression | undefined {
+    if (!expression) {
+      return;
+    }
+    if (
+      ts.isParenthesizedExpression(expression) ||
+      ts.isAsExpression(expression) ||
+      ts.isTypeAssertionExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isNonNullExpression(expression)
+    ) {
+      return resolve(expression.expression, seen);
+    }
+    if (!ts.isIdentifier(expression)) {
+      return expression;
+    }
+    if (seen.has(expression.text)) {
+      return;
+    }
+    seen.add(expression.text);
+    return resolve(constants.get(expression.text), seen);
+  }
+  const initializer = resolve(exported);
+  assert.ok(
+    initializer && ts.isCallExpression(initializer),
+    `Cannot read initializer arguments: ${fileName}`,
+  );
+  if (!initializer.arguments[2]) {
+    return [];
+  }
+  const extras = resolve(initializer.arguments[2]);
+  assert.ok(
+    extras && ts.isObjectLiteralExpression(extras),
+    `Cannot read declared extras: ${fileName}`,
+  );
+  return extras.properties
+    .flatMap((property) =>
+      property.name && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name))
+        ? [property.name.text]
+        : [],
+    )
+    .sort();
+}
+
 describe('service migration inventory', function () {
   // Read metadata and source only: importing the catalogue could construct resources or
   // require a database before a service's real owner has initialized it.
@@ -115,20 +184,12 @@ describe('service migration inventory', function () {
 
   for (const [name, service] of Object.entries(inventory.services)) {
     if (service.migrated) {
-      it(`${name} has the migrated root shape and exactly the catalogued extras`, function () {
+      it(`${name} has exactly the catalogued extras`, function () {
         const rootFile = path.join(
           servicesRoot,
           service.kind === 'directory' ? `${name}/index.ts` : name,
         );
-        const helperImport = path
-          .relative(path.dirname(rootFile), path.join(coreRoot, 'core/kernel/define-service'))
-          .split(path.sep)
-          .join('/');
-        const actual = readServiceRootExtras(
-          readFileSync(rootFile, 'utf8'),
-          rootFile,
-          helperImport,
-        );
+        const actual = declaredExtras(rootFile);
         assert.deepEqual(
           actual,
           Object.keys(service.extras ?? {}).sort(),

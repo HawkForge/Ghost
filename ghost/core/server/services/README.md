@@ -140,9 +140,9 @@ Record missing coverage and known bugs in `blockers`. Before changing a service,
 address the gaps relevant to that change; neither `audited` nor a passing
 inventory check proves that its behavior is protected against regressions.
 
-The unit test checks the inventory's shape, example, paths and directory coverage,
-and the public root shape and extras catalogue for migrated services. It parses
-source without importing services or driving initialization. `README.md` and the inventory
+The unit test checks the inventory's shape, example, paths, directory coverage
+and extras catalogue. It reads declared extras without importing services or
+driving initialization. ESLint separately enforces the public root shape. `README.md` and the inventory
 itself are the only metadata exclusions. Retire the inventory after migration;
 keep the behavioral tests and carry the established service convention check
 forward independently of the catalogue.
@@ -190,11 +190,12 @@ Catalogue every member under the service's `extras` inventory entry, recording:
 - `dependencies` and `failurePolicy`, including retry and background-failure behaviour.
 - `destination`: the intended future owner or the interface still to be decided.
 
-The inventory check parses each migrated root, rejects named runtime exports and
-unmanaged initializer shapes, and requires its extras names to match the catalogue
-exactly. Legacy roots remain outside this shape rule until migrated. The check
-covers the public shape; behavioural tests still establish readiness, boot ordering,
-resource cleanup and each extra's semantics.
+The Core-local ESLint rule `service-roots/shape` enforces default initializers,
+explicit extras and the absence of other runtime exports or container mutations.
+Its scope comes from `migrated: true` in the inventory; legacy roots remain outside
+the rule until migrated. The separate inventory test requires declared extras
+names to match the catalogue exactly. Behavioural tests still establish readiness,
+boot ordering, resource cleanup and each extra's semantics.
 
 ## Initialization
 

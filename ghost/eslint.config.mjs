@@ -1,3 +1,8 @@
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+import yaml from 'js-yaml';
+import serviceRootShape from './eslint-rules/service-root-shape.mjs';
 import js from '@eslint/js';
 import globals from 'globals';
 import ghostPlugin from 'eslint-plugin-ghost';
@@ -23,6 +28,35 @@ const ghostBaseRules = {
   'ghost/filenames/match-regex': 'off',
   'no-unused-private-class-members': 'off',
 };
+
+// The inventory supplies migration scope only; catalogue validation stays in tests.
+const { services } = yaml.load(
+  readFileSync(new URL('./core/server/services/service-inventory.yaml', import.meta.url), 'utf8'),
+);
+const serviceRootsPlugin = {
+  // Invalidate ESLint's per-file cache when this local rule changes.
+  meta: {
+    name: 'ghost-service-roots',
+    version: createHash('sha256')
+      .update(readFileSync(new URL('./eslint-rules/service-root-shape.mjs', import.meta.url)))
+      .digest('hex'),
+  },
+  rules: { shape: serviceRootShape },
+};
+const migratedRoots = Object.entries(services)
+  .filter(([, service]) => service.migrated)
+  .map(([name, service]) => {
+    const file = `core/server/services/${service.kind === 'directory' ? `${name}/index.ts` : name}`;
+    const helperImport = path
+      .relative(path.dirname(file), 'core/kernel/define-service')
+      .split(path.sep)
+      .join('/');
+    return {
+      files: [file],
+      plugins: { 'service-roots': serviceRootsPlugin },
+      rules: { 'service-roots/shape': ['error', { helperImport }] },
+    };
+  });
 
 const mochaRulesOffForGhost = mochaRulesOff(ghostPlugin);
 
@@ -164,6 +198,15 @@ export default tseslint.config(
       ...tsLegacyRelaxations,
     },
   },
+  // Core-local lint tooling is ESM and is checked alongside the server source.
+  {
+    files: ['eslint.config.mjs', 'eslint-rules/**/*.mjs'],
+    ...js.configs.recommended,
+    languageOptions: { sourceType: 'module', globals: globals.node },
+    plugins: { ghost: ghostPlugin },
+    rules: { ...js.configs.recommended.rules, ...ghostBaseRules },
+  },
+  ...migratedRoots,
   // ============================================================
   // API endpoints
   // ============================================================
